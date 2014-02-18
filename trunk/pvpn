@@ -90,6 +90,10 @@ do_args() {
             -S|--stop)
                 disconnect "$2"
                 exit 0;;
+            -e|--ssh)
+                SSH=$2
+                shift
+                ;;
             -*)
                 die "Unknown argument: $1";;
             *)
@@ -101,6 +105,8 @@ do_args() {
     ssh_host="$1"
     [[ -z "$ssh_host" ]] && die "Missing ssh-host, see 'pvpn --help'"
     shift
+
+    [[ -z "$SSH" ]] && SSH=/usr/bin/ssh
 
     routes="$@"
 
@@ -123,7 +129,7 @@ connect_ppp() {
     which pppd &>/dev/null || die "pppd(8) missing, install or consider using '-t ssh-3'"
 
     pppd_output=$(mktemp)
-    pppd ifname pvpn updetach noauth silent nodeflate pty "/usr/bin/ssh ${SSH_ARGS} -oConnectTimeout=50 -oServerAliveInterval=55 '$ssh_host' pppd nodetach notty noauth" ipparam vpn "$ip_pair" >"$pppd_output" || die "pppd failed (exit code $?)"
+    pppd ifname pvpn updetach noauth silent nodeflate pty "${SSH} ${SSH_ARGS} -oConnectTimeout=50 -oServerAliveInterval=55 '$ssh_host' pppd nodetach notty noauth" ipparam vpn "$ip_pair" >"$pppd_output" || die "pppd failed (exit code $?)"
     #read client_device server_device <$(awk '/^Connect/ {print $2 " " $4; exit;}' <"$pppd_output")
     rm "$pppd_output"
     client_device=$(logread |grep "Connect:"|tail -n1|awk '{print $8}')
@@ -140,7 +146,7 @@ connect_ssh_layer3() {
     server_ip="${ip_pair#*:}"
     client_device="${device_pair%:*}"
     server_device="${device_pair#*:}"
-    ssh ${SSH_ARGS} -TCf -oServerAliveInterval=55 \
+    ${SSH} ${SSH_ARGS} -TCf -oServerAliveInterval=55 \
              -oExitOnForwardFailure=yes \
              -oTunnel=point-to-point \
              -oConnectTimeout=50 \
@@ -242,7 +248,7 @@ available_devicepair() {
     cmd_available_tun_device="ifconfig |grep -e \"tun[0-9]\|pvpn\"|cut -d' ' -f 1 >$tempfile ; i=0 ; while [ \$i -le 50 ] ;do echo \"$device_type\$i\" ;let i++ ;done | grep -v -f $tempfile | tail -n1 ;rm -f $tempfile"
     #cmd_available_tun_device="exclude=\"\$(ip tuntap |cut -d: -f1)\" ;if [ \"\$exclude\" != \"\" ]; then  echo $devices | tr ' ' '\n' | grep -v \"\$exclude\" | tail -n1 ;else  echo $devices | tr ' ' '\n' | tail -n1 ;fi "
     client_tun_device="$(eval $cmd_available_tun_device)"
-    server_tun_device="$(ssh $SSH_ARGS "$ssh_host" $cmd_available_tun_device)"
+    server_tun_device="$(${SSH} ${SSH_ARGS} "$ssh_host" $cmd_available_tun_device)"
 
     echo "$client_tun_device:$server_tun_device"
 }
