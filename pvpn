@@ -129,11 +129,14 @@ connect_ppp() {
     which pppd &>/dev/null || die "pppd(8) missing, install or consider using '-t ssh-3'"
 
     pppd_output=$(mktemp)
-    pppd ifname pvpn updetach noauth silent nodeflate pty "${SSH} ${SSH_ARGS} -oConnectTimeout=50 -oServerAliveInterval=55 '$ssh_host' pppd nodetach notty noauth" ipparam vpn "$ip_pair" >"$pppd_output" || die "pppd failed (exit code $?)"
+    tempfile=$(mktemp)
+    client_device=`ifconfig |grep -e "tun[0-9]\|pvpn"|cut -d' ' -f 1 >$tempfile ; i=50 ; while [ $i -ge 1 ] ;do echo "pvpn$i" ;let i-- ;done | grep -v -f $tempfile | tail -n1 `
+    rm -f $tempfile
+    pppd ifname $client_device updetach noauth silent nodeflate pty "${SSH} ${SSH_ARGS} -oConnectTimeout=50 -oServerAliveInterval=55 '$ssh_host' pppd nodetach notty noauth" ipparam vpn "$ip_pair" >"$pppd_output" || die "pppd failed (exit code $?)"
     #read client_device server_device <$(awk '/^Connect/ {print $2 " " $4; exit;}' <"$pppd_output")
     rm "$pppd_output"
-    client_device=$(logread |grep "Connect:"|tail -n1|awk '{print $8}')
-    server_device=$(logread |grep "Connect:"|tail -n1|awk '{print $10}')
+    #client_device=$(logread |grep "Connect:"|tail -n1|awk '{print $8}')
+    #server_device=$(logread |grep "Connect:"|tail -n1|awk '{print $10}')
     stop_cmd="kill $(cat "/var/run/$client_device.pid")"
 }
 
