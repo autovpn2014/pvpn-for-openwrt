@@ -184,7 +184,7 @@ disconnect() {
     filename="$STATE_DIR/$1"
     source "$filename"
     eval $stop_cmd
-    ip route delete $ssh_ip
+    [[ -n "$ssh_ip" ]] && ip route delete "$ssh_ip"
     rm "$filename"
     echo "$1 disconnected"
 }
