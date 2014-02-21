@@ -94,6 +94,10 @@ do_args() {
                 SSH=$2
                 shift
                 ;;
+            -r|--route-file)
+                route_file="$2"
+                shift
+                ;;
             -*)
                 die "Unknown argument: $1";;
             *)
@@ -222,6 +226,9 @@ route() {
         esac
         shift
     done
+    [ -f "${route_file}" ] && while read route ;do
+        ip route add "$route" via "$gateway"
+    done <"${route_file}"
 }
 
 
