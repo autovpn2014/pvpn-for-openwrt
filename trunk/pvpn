@@ -153,7 +153,7 @@ connect_ssh_layer3() {
     server_ip="${ip_pair#*:}"
     client_device="${device_pair%:*}"
     server_device="${device_pair#*:}"
-    ${SSH} ${SSH_ARGS} -TCf -oServerAliveInterval=55 \
+    ${SSH} -TCf ${SSH_ARGS} -oServerAliveInterval=55 \
              -oExitOnForwardFailure=yes \
              -oTunnel=point-to-point \
              -oConnectTimeout=50 \
