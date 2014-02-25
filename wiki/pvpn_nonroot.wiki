@@ -1,0 +1,38 @@
+#非root多用户pvpn服务器配置
+
+
+默认情况pvpn使用ppp over ssh 的方式建立vpn连接，一般linux服务器端的pppd不允许非root用户执行，但可以通过sudo为普通用户指派执行pppd的权限，同时不允许普通用户使用ssh登陆服务器。使用-t ssh-3 时，非root用户不能建立vpn，目前没有解决方法。
+
+
+
+= 配置 =
+1) 新建用户
+{{{
+useradd sshvpn1 -m
+}}}
+2) 为用户生成密钥对
+{{{
+ssh-keygen -f id_rsa_sshvpn1 -N ""
+}}}
+3) 配置用户公钥验证
+{{{
+mkdir ~sshvpn1/.ssh
+echo -n 'command="/usr/bin/pvpncheck.sh",no-pty,no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding ' >>~sshvpn1/.ssh/authorized_keys  #注意最后的单引前面有空格
+cat id_rsa_sshvpn1.pub >>~sshvpn1/.ssh/authorized_keys
+}}}
+4) 下载pvpncheck.sh脚本到/usr/bin/pvpncheck.sh
+{{{
+wget -O /usr/bin/pvpncheck.sh http://http://pvpn-for-openwrt.googlecode.com/svn/trunk/pvpncheck.sh
+chmod +x /usr/bin/pvpncheck.sh
+}}}
+5) 授权用户可以执行pppd
+{{{
+echo "sshvpn1 ALL = (root) /usr/sbin/pppd, NOPASSWD:/usr/sbin/pppd" >>/etc/sudoers
+}}}
+6) 下载修改pvpn脚本
+{{{
+wget -O pvpn http://pvpn-for-openwrt.googlecode.com/svn/trunk/pvpn
+}}}
+搜索 'pppd nodetach' 并替换成 'sudo pppd nodetach'
+
+7) 把修改后的pvpn脚本和公钥 id_rsa_sshvpn1 分发给用户即可
