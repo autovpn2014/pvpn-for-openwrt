@@ -23,7 +23,7 @@ cat id_rsa_sshvpn1.pub >>~sshvpn1/.ssh/authorized_keys
 }}}
 4) 下载pvpncheck.sh脚本到/usr/bin/pvpncheck.sh
 {{{
-wget -O /usr/bin/pvpncheck.sh http://http://pvpn-for-openwrt.googlecode.com/svn/trunk/pvpncheck.sh
+wget -O /usr/bin/pvpncheck.sh http://pvpn-for-openwrt.googlecode.com/svn/trunk/pvpncheck.sh
 chmod +x /usr/bin/pvpncheck.sh
 }}}
 5) 授权用户可以执行pppd
