@@ -1,7 +1,7 @@
 #summary 非root多用户pvpn服务器配置
 
 
-默认情况pvpn使用ppp over ssh 的方式建立vpn连接，一般linux服务器端的pppd不允许非root用户执行，但可以通过sudo为普通用户指派执行pppd的权限，且只允许执行pppd命令，同时不允许用户使用ssh登陆服务器。些方法必须使用公钥验证。使用-t ssh-3 时，非root用户也不能建立vpn，目前没有解决方法。
+默认情况pvpn使用ppp over ssh 的方式建立vpn连接，一般linux服务器端的pppd不允许非root用户执行，但可以通过sudo为普通用户指派执行pppd的权限，且只允许执行pppd命令，同时不允许用户使用ssh登陆服务器。此方法必须使用公钥验证。使用-t ssh-3 参数时时，非root用户也不能建立vpn，目前没有解决方法。
 
 
 
@@ -36,4 +36,4 @@ wget -O pvpn http://pvpn-for-openwrt.googlecode.com/svn/trunk/pvpn
 }}}
 搜索 'pppd nodetach' 并替换成 'sudo pppd nodetach'
 
-7) 把修改后的pvpn脚本和公钥 id_rsa_sshvpn1 分发给用户即可
+7) 把修改后的pvpn脚本和私钥文件:id_rsa_sshvpn1 分发给用户即可
