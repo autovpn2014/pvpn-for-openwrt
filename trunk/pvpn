@@ -134,7 +134,7 @@ connect_ppp() {
 
     pppd_output=$(mktemp)
     tempfile=$(mktemp)
-    client_device=`ifconfig |grep -e "tun[0-9]\|pvpn"|cut -d' ' -f 1 >$tempfile ; i=50 ; while [ $i -ge 1 ] ;do echo "pvpn$i" ;let i-- ;done | grep -v -f $tempfile | tail -n1 `
+    client_device=`ifconfig |grep -e "^pvpn[0-9]"|cut -d' ' -f 1 >$tempfile ; if [ ! -s $tempfile ];then echo pvpn1;exit ; fi; i=50 ; while [ $i -ge 1 ] ;do echo "pvpn$i" ;let i-- ;done | grep -v -f $tempfile | tail -n1 `
     rm -f $tempfile
     pppd ifname $client_device lcp-echo-failure 10 lcp-echo-interval 3 updetach noauth silent nodeflate pty "${SSH} ${SSH_ARGS} -oConnectTimeout=50 -oServerAliveInterval=55 '$ssh_host' pppd nodetach notty noauth" ipparam vpn "$ip_pair" >"$pppd_output" || die "pppd failed (exit code $?)"
     #read client_device server_device <$(awk '/^Connect/ {print $2 " " $4; exit;}' <"$pppd_output")
@@ -255,7 +255,7 @@ available_devicepair() {
         *)  die "available_devicepair(): Bad device_type '$device_type'";;
     esac
     tempfile=$(mktemp)
-    cmd_available_tun_device="ifconfig |grep -e \"tun[0-9]\|pvpn\"|cut -d' ' -f 1 >$tempfile ; i=0 ; while [ \$i -le 50 ] ;do echo \"$device_type\$i\" ;let i++ ;done | grep -v -f $tempfile | tail -n1 ;rm -f $tempfile"
+    cmd_available_tun_device="ifconfig |grep -e \"^tun[0-9]\"|cut -d' ' -f 1 >$tempfile ;if [ ! -s $tempfile ] ;then echo tun50;exit;fi; i=0 ; while [ \$i -le 50 ] ;do echo \"$device_type\$i\" ;let i++ ;done | grep -v -f $tempfile | tail -n1 ;rm -f $tempfile"
     #cmd_available_tun_device="exclude=\"\$(ip tuntap |cut -d: -f1)\" ;if [ \"\$exclude\" != \"\" ]; then  echo $devices | tr ' ' '\n' | grep -v \"\$exclude\" | tail -n1 ;else  echo $devices | tr ' ' '\n' | tail -n1 ;fi "
     client_tun_device="$(eval $cmd_available_tun_device)"
     server_tun_device="$(${SSH} ${SSH_ARGS} "$ssh_host" $cmd_available_tun_device)"
